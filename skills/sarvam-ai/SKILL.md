@@ -1,10 +1,10 @@
 ---
 name: indic-tts
-description: Indian TTS for everyone - High-quality text-to-speech for 11 Indian languages using Sarvam AI's Bulbul v3 model. Features 30+ voices, natural prosody, and support for Hindi, Bengali, Tamil, Telugu, Gujarati, Kannada, Malayalam, Marathi, Punjabi, Odia, and English.
+description: Comprehensive Indian AI toolkit - TTS, Document Intelligence, Text Processing (Chat, Translation, Transliteration, Language Detection), and Speech-to-Text (REST/WebSocket/Batch). Supports 23 Indian languages using Sarvam AI.
 metadata:
   author: ankitjh4
   category: External
-  display-name: Indian TTS for everyone
+  display-name: Indian AI Toolkit (Sarvam)
 ---
 
 # Indian TTS for everyone
@@ -101,9 +101,164 @@ python3 scripts/document_intelligence.py --job-id <job-id> --download -o ./outpu
 
 ---
 
+## Text Processing
+
+Text AI capabilities including chat completion, translation, transliteration, and language detection. Supports 23 Indian languages.
+
+### Chat / Text Completion
+
+Sarvam's LLM API (`sarvam-m` model) for chat and text completion.
+
+```bash
+# Simple chat
+python3 scripts/text_processing.py chat "What is the capital of India?"
+
+# Chat with system context
+python3 scripts/text_processing.py chat "Tell me about AI" --system "You are a helpful AI assistant"
+
+# Adjust temperature (0-2, lower = more focused)
+python3 scripts/text_processing.py chat "Creative story" --temperature 0.8
+```
+
+### Translation
+
+Translate text between 23 Indian languages. Two models available:
+- `mayura:v1` - 12 languages, supports modes and transliteration
+- `sarvam-translate:v1` - All 23 languages, formal mode only
+
+**Languages**: hi-IN, en-IN, bn-IN, gu-IN, kn-IN, ml-IN, mr-IN, od-IN, pa-IN, ta-IN, te-IN, as-IN, brx-IN, doi-IN, kok-IN, ks-IN, mai-IN, mni-IN, ne-IN, sa-IN, sat-IN, sd-IN, ur-IN
+
+```bash
+# Auto-detect source and translate to Hindi
+python3 scripts/text_processing.py translate "Hello, how are you?" --target hi-IN
+
+# Specify source language
+python3 scripts/text_processing.py translate "नमस्ते" --source hi-IN --target en-IN
+
+# Use Mayura model with colloquial mode
+python3 scripts/text_processing.py translate "What's up?" --target hi-IN --model mayura:v1 --mode modern-colloquial
+
+# Translate with romanized output
+python3 scripts/text_processing.py translate "I am going home" --target hi-IN --model mayura:v1 --output-script roman
+```
+
+**Modes** (mayura:v1 only): `formal`, `modern-colloquial`, `classic-colloquial`, `code-mixed`
+
+**Output Scripts** (mayura:v1 only): `roman`, `fully-native`, `spoken-form-in-native`
+
+### Transliteration
+
+Convert text from one script to another while preserving pronunciation.
+
+```bash
+# Hindi to English (romanization)
+python3 scripts/text_processing.py transliterate "नमस्ते" --source hi-IN --target en-IN
+
+# English to Hindi
+python3 scripts/text_processing.py transliterate "namaste" --source en-IN --target hi-IN
+
+# With spoken form conversion
+python3 scripts/text_processing.py transliterate "I have 2 meetings at 3pm" --source en-IN --target hi-IN --spoken-form
+```
+
+### Language Detection
+
+Automatically identify the language and script of text.
+
+```bash
+python3 scripts/text_processing.py detect "नमस्ते दुনিয়া"
+# Output: Language: hi-IN, Script: Deva
+
+python3 scripts/text_processing.py detect "Hello world"
+# Output: Language: en-IN, Script: Latn
+```
+
+---
+
+## Speech-to-Text
+
+Convert speech to text with automatic language detection and optional translation to English. Three modes available:
+
+1. **REST API** - Quick transcription (<30 seconds), immediate results
+2. **WebSocket** - Real-time streaming for live audio
+3. **Batch API** - Process multiple files or longer audio with speaker diarization
+
+### Supported Languages (22 Indian languages)
+
+hi-IN, bn-IN, kn-IN, ml-IN, mr-IN, od-IN, pa-IN, ta-IN, te-IN, gu-IN, en-IN, as-IN, ur-IN, ne-IN, kok-IN, ks-IN, sd-IN, sa-IN, sat-IN, mni-IN, brx-IN, mai-IN, doi-IN
+
+### REST API (Quick Transcription)
+
+Best for short audio files (<30 seconds). Immediate results.
+
+```bash
+# Basic transcription with auto-translation to English
+python3 scripts/speech_to_text.py rest audio.mp3
+
+# With context prompt
+python3 scripts/speech_to_text.py rest audio.mp3 --prompt "This is a conversation about technology"
+
+# Specify codec for PCM files
+python3 scripts/speech_to_text.py rest audio.raw --codec pcm_s16le
+```
+
+**Supported formats**: WAV, MP3, AAC, AIFF, OGG, OPUS, FLAC, MP4/M4A, AMR, WMA, WebM, PCM
+
+### WebSocket Streaming
+
+Real-time speech-to-text with streaming audio.
+
+```bash
+# Streaming with translation (default)
+python3 scripts/speech_to_text.py websocket audio.wav
+
+# Transcription mode (no translation)
+python3 scripts/speech_to_text.py websocket audio.wav --mode transcribe
+
+# Different output modes (saaras:v3 only)
+python3 scripts/speech_to_text.py websocket audio.wav --mode translit    # Romanized output
+python3 scripts/speech_to_text.py websocket audio.wav --mode verbatim  # Exact word-for-word
+python3 scripts/speech_to_text.py websocket audio.wav --mode codemix   # Code-mixed output
+```
+
+**Modes** (v3): `translate`, `transcribe`, `verbatim`, `translit`, `codemix`
+
+### Batch API (Long Audio & Multiple Files)
+
+For longer audio or processing multiple files. Supports speaker diarization.
+
+```bash
+# Full workflow - create, upload, start, poll, download
+python3 scripts/speech_to_text.py batch audio1.mp3 audio2.mp3 audio3.mp3 --output-dir ./transcripts/
+
+# With speaker diarization
+python3 scripts/speech_to_text.py batch meeting.wav --diarization --num-speakers 3
+
+# Step-by-step workflow
+# 1. Create job
+python3 scripts/speech_to_text.py batch-create --diarization
+# Returns: Job ID: abc-123
+
+# 2. Upload files
+python3 scripts/speech_to_text.py batch-upload abc-123 audio.mp3
+
+# 3. Start job
+python3 scripts/speech_to_text.py batch-start abc-123
+
+# 4. Check status
+python3 scripts/speech_to_text.py batch-status abc-123
+
+# 5. Download results
+python3 scripts/speech_to_text.py batch-download abc-123 output1.txt output2.txt --output-dir ./results/
+```
+
+**Batch workflow states**: Accepted → Pending → Running → Completed/Failed
+
+---
+
 ## Text-to-Speech (TTS)
 
-High-quality Text-to-Speech for Indian languages using Sarvam AI's Bulbul v3 model. Features 30+ voices, natural prosody, and support for 11 Indian languages.
+High-quality Text-to-Speech for Indian languages using Sarvam AI's Bulbul v3 model.
 
 ### Quick Start
 
@@ -133,27 +288,6 @@ python3 scripts/tts.py "नमस्ते, आप कैसे हैं?" --la
 
 **Male**: Shubh, Aditya, Rahul, Amit, Dev, Arjun, Ratan, Varun, Manan, Sumit, Kabir, Aayan, Ashutosh, Advait, Anand, Tarun, Sunny, Mani, Gokul, Vijay, Mohit, Rehan, Soham
 
-### Usage
-
-```python
-from sarvamai import SarvamAI
-import os
-
-client = SarvamAI(api_subscription_key=os.environ["SARVAM_API_KEY"])
-
-# Generate speech
-response = client.text_to_speech.convert(
-    text="नमस्ते, आप कैसे हैं?",
-    target_language_code="hi-IN",
-    model="bulbul:v3",
-    speaker="meira"
-)
-
-# Save to file
-from sarvamai.play import save
-save(response, "output.wav")
-```
-
 ### TTS Options
 
 | Parameter | Default | Description |
@@ -162,6 +296,7 @@ save(response, "output.wav")
 | `--language` | hi-IN | Target language code |
 | `--speaker` | meira | Voice speaker |
 | `--model` | bulbul:v3 | TTS model |
+| `--output` | output.wav | Output file path |
 | `--sample-rate` | 24000 | Audio sample rate |
 
 ---
