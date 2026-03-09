@@ -20,6 +20,7 @@ A growing collection of OpenClaw skills for Indian AI providers and services. Bu
 | **irctc** | IRCTC | Train booking and PNR status checking |
 | **phonepe** | PhonePe | Payment gateway integration |
 | **razorpay** | Razorpay | Payment gateway integration |
+| **namma-yatri** | Namma Yatri / JusPay | Open-source, zero-commission ride-hailing platform (Haskell/PureScript/Rust) |
 | **rapido** | Rapido | Ride booking API for bikes and autos across India |
 | **zoho** | Zoho | CRM and business tools integration |
 
