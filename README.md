@@ -13,6 +13,7 @@ A growing collection of OpenClaw skills for Indian AI providers and services. Bu
 | Skill | Provider | Description |
 |-------|----------|-------------|
 | **sarvam-ai** | Sarvam AI | Indian language TTS, STT, translation, and document intelligence |
+| **vedic-astrology** | Multiple | Complete Vedic astrology charts with D1-D60, Panchanga, KP system, Vimshottari Dasha |
 | **ondc-seller** | ONDC | Deploy and manage ONDC seller applications with catalog, orders, and logistics |
 | **ondc-buyer** | ONDC | Deploy and manage ONDC buyer applications with search, cart, and payments |
 | **indian-news** | Multiple | Fetch news from Indian sources |
