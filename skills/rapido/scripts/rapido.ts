@@ -45,29 +45,40 @@ class RapidoAPI {
     endpoint: string,
     method: string = "GET",
     body?: any,
-    authenticated: boolean = true
-  ) {
+    authenticated: boolean = false
+  ): Promise<any> {
+    const url = `${BASE_URL}${endpoint}`;
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
+      "User-Agent": "Mozilla/5.0 (Linux; Android 10) Rapido PWA",
+      Origin: "https://m.rapido.bike",
+      Referer: "https://m.rapido.bike/",
     };
 
-    if (authenticated && this.config.userId) {
+    if (authenticated && this.config.token) {
+      headers["Authorization"] = `Bearer ${this.config.token}`;
       headers["x-consumer-username"] = `${this.config.userId}:`;
     }
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    const response = await fetch(url, {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
     });
 
-    const data = await response.json();
-
-    if (data.info?.status !== "success") {
-      throw new Error(data.info?.message || "Request failed");
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMsg = `Request failed with status ${response.status}`;
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMsg = errorJson.message || errorJson.error || errorMsg;
+      } catch {
+        errorMsg = errorText || errorMsg;
+      }
+      throw new Error(errorMsg);
     }
 
-    return data;
+    return response.json();
   }
 
   private generateHash(mobile: string): string {
@@ -155,6 +166,31 @@ class RapidoAPI {
     const body = { lat, lng };
     const result = await this.request("/location/services", "POST", body);
     return result.data.data;
+  }
+
+  async getUnAuthFareEstimate(
+    pickupLocation: Location,
+    dropLocation: Location
+  ) {
+    console.log("💰 Getting fare estimate (unauthenticated)...");
+
+    const body = {
+      pickupLocation,
+      dropLocation,
+      deviceId: "seo-route-pages"
+    };
+
+    const result = await this.request("/unup/scc/fareEstimate", "POST", body, false);
+    
+    console.log(`\n📊 Fare Estimates:`);
+    if (result.data && result.data.rides) {
+      for (const ride of result.data.rides) {
+        console.log(`   ${ride.ride_name}: ₹${ride.fare.min_fare} - ₹${ride.fare.max_fare}`);
+        console.log(`      Distance: ${ride.distance_text}, ETA: ${ride.eta_text}`);
+      }
+    }
+
+    return result.data;
   }
 
   async getFareEstimate(
@@ -371,7 +407,7 @@ async function main() {
           address: "Drop Location",
         };
 
-        await api.getFareEstimate(pickup, drop);
+        await api.getUnAuthFareEstimate(pickup, drop);
         break;
       }
 

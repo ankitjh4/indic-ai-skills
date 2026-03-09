@@ -9,6 +9,24 @@ metadata:
 
 ---
 
+⚠️ **CURRENT STATUS: NOT WORKING**
+
+This skill is currently **non-functional** as of March 2026. The Rapido API has changed to use a complex encoding scheme (JSON array → ASCII → protobuf binary) for responses, making it impossible to decode fare estimates and booking responses without the proprietary protobuf schema.
+
+**What works:**
+- ✅ Location search (autocomplete)
+- ✅ Geocoding (place ID to coordinates)
+
+**What doesn't work:**
+- ❌ Fare estimates (returns encoded binary)
+- ❌ Ride booking (requires authentication)
+- ❌ Wallet balance (requires authentication)
+- ❌ Live tracking (requires authentication)
+
+The skill code is preserved for reference and educational purposes, but it cannot successfully book rides at this time. A new authenticated HAR capture would be needed to reverse-engineer the current encoding scheme.
+
+---
+
 # Rapido Ride Booking Skill
 
 Complete API integration for Rapido - India's largest bike taxi service. Book bikes and autos, get fare estimates, track rides in real-time, and manage your wallet.
